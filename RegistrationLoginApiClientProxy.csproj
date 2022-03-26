@@ -12,7 +12,6 @@
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\CommonLibraries\DevConsulting.Common.Models\DevConsulting.Common.Models.csproj" />
-    <ProjectReference Include="..\..\CommonLibraries\JustHelpDesk.Models\JustHelpDesk.Models.csproj" />
     <ProjectReference Include="..\..\CommonLibraries\DevConsulting.RegistrationLoginApi.Models\DevConsulting.RegistrationLoginApi.Client.csproj" />
   </ItemGroup>
 </Project>

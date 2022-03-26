@@ -1,9 +1,9 @@
 using DevConsulting.RegistrationLoginApi.Client;
 using DevConsulting.RegistrationLoginApi.Client.Models;
 using Newtonsoft.Json;
-using JustHelpDesk.Models;
 using Microsoft.AspNetCore.Http;
 using DevConsulting.Common.Models.Extensions;
+using DevConsulting.Common.Models;
 namespace DevConsulting.Client{
 
     public interface IRegistrationLoginApiService{
