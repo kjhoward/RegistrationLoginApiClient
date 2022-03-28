@@ -56,7 +56,7 @@ namespace DevConsulting.Client{
         }
 
         public async Task<MessageResponse> GetUser(long userId){
-            var result = await httpClient.GetAsync($"users/{userId}");
+            var result = await httpClient.AddTokenToHeader(UserSession.Token).GetAsync($"users/{userId}");
             if(!result.IsSuccessStatusCode)
                 return await GetMessageFromFailedHttpResponse(result);
 
