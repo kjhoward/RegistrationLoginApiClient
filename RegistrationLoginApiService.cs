@@ -11,7 +11,7 @@ namespace DevConsulting.Client{
 
         public Task<MessageResponse> Register(RegisterRequest registerForm);
         public Task<MessageResponse> SetUser();
-
+        public Task<MessageResponse> GetUser(long userId);
         public void RemoveUser();
 
     }
@@ -53,6 +53,15 @@ namespace DevConsulting.Client{
             var response = await result.Content.ReadAsStringAsync();
             
             return new MessageResponse{Message = response, IsError=false};
+        }
+
+        public async Task<MessageResponse> GetUser(long userId){
+            var result = await httpClient.GetAsync($"users/{userId}");
+            if(!result.IsSuccessStatusCode)
+                return await GetMessageFromFailedHttpResponse(result);
+
+            var response = await result.Content.ReadAsStringAsync();
+            return new MessageResponse {Message = response, IsError = false};
         }
 
         public async Task<MessageResponse> SetUser()
