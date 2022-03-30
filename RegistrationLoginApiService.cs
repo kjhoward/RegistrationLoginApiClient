@@ -7,12 +7,13 @@ using DevConsulting.Common.Models;
 namespace DevConsulting.Client{
 
     public interface IRegistrationLoginApiService{
-        public Task<MessageResponse> Authenticate(AuthenticateRequest loginForm);
+        public Task<AuthenticateResponse?> Authenticate(AuthenticateRequest loginForm);
 
         public Task<MessageResponse> Register(RegisterRequest registerForm);
-        public Task<MessageResponse> SetUser();
         public Task<MessageResponse> GetUser(long userId);
-        public void RemoveUser();
+        public Task<MessageResponse> GetUser(string username);
+        public Task<MessageResponse> Update(long id, UpdateRequest updateReq);
+        public Task<MessageResponse> Delete(long id);
 
     }
     public class RegistrationLoginApiService : IRegistrationLoginApiService
@@ -29,19 +30,20 @@ namespace DevConsulting.Client{
             jwtUtils = utils;
             _httpContextAccessor = httpContextAccessor;
         }
-        public async Task<MessageResponse> Authenticate(AuthenticateRequest loginForm)
+        public async Task<AuthenticateResponse?> Authenticate(AuthenticateRequest loginForm)
         {
             var result = await httpClient.PostAsJsonAsync<AuthenticateRequest>("users/authenticate",loginForm);
             if (!result.IsSuccessStatusCode)
-                return await GetMessageFromFailedHttpResponse(result);
+                return null;
 
             var response = await result.Content.ReadAsStringAsync();
             var authResponse = JsonConvert.DeserializeObject<AuthenticateResponse>(response);
-
+            if(authResponse == null)
+                return null;
             //Set the Toke in the session
             UserSession.Token = authResponse.Token;
 
-            return new MessageResponse{Message = $"Welcome back {authResponse.Username}", IsError=false};
+            return authResponse;
         }
 
         public async Task<MessageResponse> Register(RegisterRequest registerForm)
@@ -64,28 +66,31 @@ namespace DevConsulting.Client{
             return new MessageResponse {Message = response, IsError = false};
         }
 
-        public async Task<MessageResponse> SetUser()
-        {
-
-            var userId = jwtUtils.ValidateToken(UserSession.Token);
-            if(!userId.HasValue)
-                return new MessageResponse{Message = "Could not validate Token"};
-            var result = await httpClient.AddTokenToHeader(UserSession.Token).GetAsync($"users/{userId.Value}");
-            if (!result.IsSuccessStatusCode)
+        public async Task<MessageResponse> GetUser(string username){
+            var result = await httpClient.AddTokenToHeader(UserSession.Token).GetAsync($"users/un/{username}");
+            if(!result.IsSuccessStatusCode)
                 return await GetMessageFromFailedHttpResponse(result);
 
             var response = await result.Content.ReadAsStringAsync();
-            var userResource =  JsonConvert.DeserializeObject<UserResource>(response);
-
-            UserSession.UserInfo = userResource;
-
-            //_httpContextAccessor.HttpContext.Response.Headers.Add("Authorization",UserSession.Token);
-
-            return new MessageResponse{Message = "OK", IsError=false};
+            return new MessageResponse {Message = response, IsError = false};
         }
 
-        public void RemoveUser(){
-            UserSession.UserInfo = null;
+        public async Task<MessageResponse> Update(long id, UpdateRequest updateReq){
+            var result = await httpClient.AddTokenToHeader(UserSession.Token).PutAsJsonAsync<UpdateRequest>($"users/{id}",updateReq);
+            if(!result.IsSuccessStatusCode)
+                return await GetMessageFromFailedHttpResponse(result);
+
+            var response = await result.Content.ReadAsStringAsync();
+            return new MessageResponse {Message = response, IsError = false};
+        }
+
+        public async Task<MessageResponse> Delete(long id){
+            var result = await httpClient.AddTokenToHeader(UserSession.Token).DeleteAsync($"users/{id}");
+            if(!result.IsSuccessStatusCode)
+                return await GetMessageFromFailedHttpResponse(result);
+
+            var response = await result.Content.ReadAsStringAsync();
+            return new MessageResponse {Message = response, IsError = false};
         }
 
         private async Task<MessageResponse> GetMessageFromFailedHttpResponse(HttpResponseMessage result){
